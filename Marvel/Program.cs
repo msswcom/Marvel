@@ -36,11 +36,6 @@ app.UseExceptionHandler(o => o.Run(async context =>
     await context.RequestServices.GetRequiredService<IExceptionHandler>().InvokeAsync(context);
 }));
 
-if (String.IsNullOrEmpty(connectionString) || connectionString == "ConnectionString")
-{
-    throw new Exception("ConnectionString should be set in appsettings.json.");
-}
-
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();

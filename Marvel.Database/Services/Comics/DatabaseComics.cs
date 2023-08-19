@@ -1,16 +1,18 @@
-﻿using Marvel.Database.Context;
+﻿using Marvel.Database.Access;
+using Marvel.Database.Context;
 using Marvel.Database.Models;
 using Marvel.Database.Pagination;
 using Marvel.Models.Pagination;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Marvel.Database.Services.Comics
 {
-    public class DatabaseComics : IDatabaseComics
+    public class DatabaseComics : DatabaseAccess, IDatabaseComics
     {
         private readonly MarvelContext context;
 
-        public DatabaseComics(MarvelContext context)
+        public DatabaseComics(MarvelContext context, IConfiguration configuration) : base(configuration)
         {
             this.context = context;
         }
