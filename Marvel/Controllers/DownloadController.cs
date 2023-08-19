@@ -8,6 +8,7 @@ using Marvel.Models.Pagination;
 using Marvel.Services;
 using Marvel.Services.Models;
 using Marvel.Services.Pagination;
+using Marvel.Services.Sort;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Marvel.Controllers
@@ -51,8 +52,12 @@ namespace Marvel.Controllers
 
             try
             {
-                var marvelCharacters = await listService.ToListAsync<MarvelCharacter>(ServiceUrl.Characters, "name");
-                var marvelComics = await listService.ToListAsync<MarvelComic>(ServiceUrl.Comics, "title");
+                var marvelCharacters = await listService.ToListAsync<MarvelCharacter>(
+                    ServiceUrl.Characters,
+                    CharacterSort.Name);
+                var marvelComics = await listService.ToListAsync<MarvelComic>(
+                    ServiceUrl.Comics,
+                    ComicSort.Title);
 
                 var characters = charactersConverter.ToList(marvelCharacters);
                 var comics = comicsConverter.ToList(marvelComics);

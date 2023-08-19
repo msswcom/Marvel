@@ -3,6 +3,7 @@ using Marvel.Models.Extensions;
 using Marvel.Services;
 using Marvel.Services.Models;
 using Marvel.Services.Pagination;
+using Marvel.Services.Sort;
 
 namespace Marvel.Converters
 {
@@ -24,7 +25,8 @@ namespace Marvel.Converters
                 if (marvelComic?.characters?.available > marvelComic?.characters?.returned)
                 {
                     var charactersByComic = await listService.ToListAsync<MarvelCharacter>(
-                        String.Format(ServiceUrl.CharactersByComic, marvelComic.id), "name");
+                        String.Format(ServiceUrl.CharactersByComic, marvelComic.id),
+                        CharacterSort.Name);
 
                     charactersComics.AddRange(charactersByComic.Select(o => new CharacterComic
                     {
