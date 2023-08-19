@@ -22,8 +22,9 @@ services
 
 services.Configure<Settings>(builder.Configuration.GetSection("Settings"));
 
-services.AddDbContext<MarvelContext>(options => options.UseSqlServer
-    (builder.Configuration.GetConnectionString("Marvel")));
+var connectionString = builder.Configuration.GetConnectionString("Marvel");
+
+services.AddDbContext<MarvelContext>(options => options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
@@ -34,6 +35,11 @@ app.UseExceptionHandler(o => o.Run(async context =>
 {
     await context.RequestServices.GetRequiredService<IExceptionHandler>().InvokeAsync(context);
 }));
+
+if (String.IsNullOrEmpty(connectionString) || connectionString == "ConnectionString")
+{
+    throw new Exception("ConnectionString should be set in appsettings.json.");
+}
 
 if (app.Environment.IsDevelopment())
 {

@@ -2,46 +2,51 @@
 using Marvel.Models.Extensions;
 using Marvel.Models.Settings;
 using Marvel.Services.Models;
+using Marvel.Services.Pagination;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace Marvel.Services.Characters
 {
-    public class CharactersPaginationService : ICharactersPaginationService
+    public class PaginationService : IPaginationService
     {
-        public const string Service = "/characters";
         private readonly IHttpService httpService;
         private readonly ServicesSettings? servicesSettings;
 
-        public CharactersPaginationService(IHttpService httpService, IOptions<Settings> settings)
+        public PaginationService(IHttpService httpService, IOptions<Settings> settings)
         {
             this.httpService = httpService;
             servicesSettings = settings?.Value?.Services;
 
-            if (servicesSettings == null
-                || String.IsNullOrEmpty(servicesSettings.Url)
-                || String.IsNullOrEmpty(servicesSettings.PublicKey)
-                || String.IsNullOrEmpty(servicesSettings.PrivateKey))
+            if (String.IsNullOrEmpty(servicesSettings?.PublicKey) || servicesSettings?.PublicKey == "PublicKey")
             {
-                throw new ArgumentNullException(nameof(servicesSettings));
+                throw new Exception("PublicKey should be set in appsettings.json.");
+            }
+            if (String.IsNullOrEmpty(servicesSettings?.PrivateKey) || servicesSettings?.PrivateKey == "PrivateKey")
+            {
+                throw new Exception("PrivateKey should be set in appsettings.json.");
             }
         }
 
-        public async Task<MarvelMessageData<MarvelCharacter>> PaginationItemsAsync(int offset = 0, int limit = MarvelPagination.Limit)
+        public async Task<MarvelMessageData<T>> ToPaginationItemsAsync<T>(
+            string url,
+            string sort,
+            int offset = 0,
+            int limit = MarvelPagination.Limit)
         {
-            var url = servicesSettings?.Url + Service;
+            url = servicesSettings?.Url + url;
 
             var ts = DateTime.Now.ToString2();
 
             var parameters = new Dictionary<string, string>
             {
-                { "apikey", servicesSettings?.PublicKey},
+                { "apikey", servicesSettings?.PublicKey ?? ""},
                 { "ts", ts },
-                { "hash", (ts + servicesSettings.PrivateKey + servicesSettings.PublicKey).Md5() },
+                { "hash", (ts + servicesSettings?.PrivateKey + servicesSettings?.PublicKey).Md5() },
                 { "offset", offset.ToString() },
                 { "limit", limit.ToString() },
-                { "orderBy", "name" }
+                { "orderBy", sort }
             };
 
             url = QueryHelpers.AddQueryString(url, parameters);
@@ -69,13 +74,20 @@ namespace Marvel.Services.Characters
 
             if (!String.IsNullOrEmpty(response))
             {
-                var data = JsonSerializer.Deserialize<MarvelMessageData<MarvelCharacter>>(response);
+                var data = JsonSerializer.Deserialize<MarvelMessageData<T>>(response);
 
-                return data;
+                if (data == null)
+                {
+                    throw new Exception("MarvelMessageData null");
+                }
+                else
+                {
+                    return data;
+                }
             }
             else
             {
-                throw new Exception($"Marvel service {Service} returned empty response");
+                throw new Exception($"Marvel service {url} returned empty response");
             }
         }
     }

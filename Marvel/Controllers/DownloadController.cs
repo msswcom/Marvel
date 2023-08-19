@@ -5,8 +5,9 @@ using Marvel.Database.Services.CharactersComics;
 using Marvel.Database.Services.Comics;
 using Marvel.Database.Services.DownloadLogs;
 using Marvel.Models.Pagination;
-using Marvel.Services.Characters;
-using Marvel.Services.Comics;
+using Marvel.Services;
+using Marvel.Services.Models;
+using Marvel.Services.Pagination;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Marvel.Controllers
@@ -15,8 +16,7 @@ namespace Marvel.Controllers
     [Route("[controller]")]
     public class DownloadController : ControllerBase
     {
-        private readonly ICharactersService charactersService;
-        private readonly IComicsService comicsService;
+        private readonly IListService listService;
         private readonly ICharactersComicsConverter charactersComicsConverter;
         private readonly ICharactersConverter charactersConverter;
         private readonly IComicsConverter comicsConverter;
@@ -25,8 +25,7 @@ namespace Marvel.Controllers
         private readonly IDatabaseComics databaseComics;
         private readonly IDatabaseDownloadLog downloadLogWrite;
 
-        public DownloadController(ICharactersService charactersService,
-            IComicsService comicsService,
+        public DownloadController(IListService listService,
             ICharactersComicsConverter charactersComicsConverter,
             ICharactersConverter charactersConverter,
             IComicsConverter comicsConverter,
@@ -35,8 +34,7 @@ namespace Marvel.Controllers
             IDatabaseComics databaseComics,
             IDatabaseDownloadLog downloadLogWrite)
         {
-            this.charactersService = charactersService;
-            this.comicsService = comicsService;
+            this.listService = listService;
             this.charactersComicsConverter = charactersComicsConverter;
             this.charactersConverter = charactersConverter;
             this.comicsConverter = comicsConverter;
@@ -53,8 +51,8 @@ namespace Marvel.Controllers
 
             try
             {
-                var marvelCharacters = await charactersService.ListAsync();
-                var marvelComics = await comicsService.ListAsync();
+                var marvelCharacters = await listService.ToListAsync<MarvelCharacter>(ServiceUrl.Characters, "name");
+                var marvelComics = await listService.ToListAsync<MarvelComic>(ServiceUrl.Comics, "title");
 
                 var characters = charactersConverter.ToList(marvelCharacters);
                 var comics = comicsConverter.ToList(marvelComics);

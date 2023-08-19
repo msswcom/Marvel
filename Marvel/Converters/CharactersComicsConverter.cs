@@ -1,17 +1,18 @@
 ﻿using Marvel.Database.Models;
 using Marvel.Models.Extensions;
-using Marvel.Services.CharactersByComic;
+using Marvel.Services;
 using Marvel.Services.Models;
+using Marvel.Services.Pagination;
 
 namespace Marvel.Converters
 {
     public class CharactersComicsConverter : ICharactersComicsConverter
     {
-        private readonly ICharactersByComicService charactersByComicService;
+        private readonly IListService listService;
 
-        public CharactersComicsConverter(ICharactersByComicService charactersByComicService)
+        public CharactersComicsConverter(IListService listService)
         {
-            this.charactersByComicService = charactersByComicService;
+            this.listService = listService;
         }
 
         public async Task<List<CharacterComic>> ToListAsync(List<MarvelComic> marvelComics)
@@ -22,7 +23,8 @@ namespace Marvel.Converters
             {
                 if (marvelComic?.characters?.available > marvelComic?.characters?.returned)
                 {
-                    var charactersByComic = await charactersByComicService.ListAsync(marvelComic.id);
+                    var charactersByComic = await listService.ToListAsync<MarvelCharacter>(
+                        String.Format(ServiceUrl.CharactersByComic, marvelComic.id), "name");
 
                     charactersComics.AddRange(charactersByComic.Select(o => new CharacterComic
                     {
@@ -34,7 +36,7 @@ namespace Marvel.Converters
                 {
                     if (marvelComic?.characters?.items != null)
                     {
-                        foreach (var item in marvelComic?.characters?.items)
+                        foreach (var item in marvelComic.characters.items)
                         {
                             if (!String.IsNullOrEmpty(item.resourceURI))
                             {
@@ -42,7 +44,7 @@ namespace Marvel.Converters
 
                                 if (item.resourceURI.Length > index + 1)
                                 {
-                                    int characterID = item.resourceURI.Substring(index + 1).ToInt();
+                                    int characterID = item.resourceURI[(index + 1)..].ToInt();
 
                                     if (characterID != 0)
                                     {
